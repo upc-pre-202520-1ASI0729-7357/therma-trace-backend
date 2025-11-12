@@ -1,8 +1,7 @@
 package com.thermatrace.thermatracebackend.iam.interfaces.rest;
 
 import com.thermatrace.thermatracebackend.iam.domain.model.aggregates.User;
-import com.thermatrace.thermatracebackend.iam.domain.model.commands.SignInCommand;
-import com.thermatrace.thermatracebackend.iam.domain.model.commands.SignUpCommand;
+import com.thermatrace.thermatracebackend.iam.domain.model.queries.GetUserByEmailQuery;
 import com.thermatrace.thermatracebackend.iam.domain.model.queries.GetUserByIdQuery;
 import com.thermatrace.thermatracebackend.iam.domain.services.UserCommandService;
 import com.thermatrace.thermatracebackend.iam.domain.services.UserQueryService;
@@ -10,6 +9,10 @@ import com.thermatrace.thermatracebackend.iam.interfaces.rest.resources.Authenti
 import com.thermatrace.thermatracebackend.iam.interfaces.rest.resources.SignInResource;
 import com.thermatrace.thermatracebackend.iam.interfaces.rest.resources.SignUpResource;
 import com.thermatrace.thermatracebackend.iam.interfaces.rest.resources.UserResource;
+import com.thermatrace.thermatracebackend.iam.interfaces.transform.AuthenticatedUserResourceFromEntityAssembler;
+import com.thermatrace.thermatracebackend.iam.interfaces.transform.SignInCommandFromResourceAssembler;
+import com.thermatrace.thermatracebackend.iam.interfaces.transform.SignUpCommandFromResourceAssembler;
+import com.thermatrace.thermatracebackend.iam.interfaces.transform.UserResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -51,32 +54,13 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "400", description = "Bad request - Email already exists or validation error.")
     })
     public ResponseEntity<UserResource> signUp(@RequestBody SignUpResource signUpResource) {
-        var signUpCommand = new SignUpCommand(
-                signUpResource.firstName(),
-                signUpResource.lastName(),
-                signUpResource.email(),
-                signUpResource.password(),
-                signUpResource.roles()
-        );
-
+        var signUpCommand = SignUpCommandFromResourceAssembler.toCommandFromResource(signUpResource);
         Long userId = userCommandService.handle(signUpCommand);
 
         User user = userQueryService.handle(new GetUserByIdQuery(userId))
                 .orElseThrow(() -> new RuntimeException("User not found after creation"));
 
-        var userResource = new UserResource(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getAvatar(),
-                user.getTimezoneId(),
-                user.getLanguageId(),
-                user.getCurrentPlan().name(),
-                user.getRoles().isEmpty() ? null : user.getRoles().iterator().next().getStringName()
-        );
-
+        var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user);
         return new ResponseEntity<>(userResource, HttpStatus.CREATED);
     }
 
@@ -92,22 +76,14 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "404", description = "User not found or invalid credentials.")
     })
     public ResponseEntity<AuthenticatedUserResource> signIn(@RequestBody SignInResource signInResource) {
-        var signInCommand = new SignInCommand(signInResource.email(), signInResource.password());
-
+        var signInCommand = SignInCommandFromResourceAssembler.toCommandFromResource(signInResource);
         String token = userCommandService.handle(signInCommand)
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        User user = userQueryService.handle(new com.thermatrace.thermatracebackend.iam.domain.model.queries.GetUserByEmailQuery(signInResource.email()))
+        User user = userQueryService.handle(new GetUserByEmailQuery(signInResource.email()))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        var authenticatedUserResource = new AuthenticatedUserResource(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                token
-        );
-
+        var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(user, token);
         return ResponseEntity.ok(authenticatedUserResource);
     }
 }
