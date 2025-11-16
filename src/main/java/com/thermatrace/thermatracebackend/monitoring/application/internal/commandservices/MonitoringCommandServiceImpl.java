@@ -23,11 +23,10 @@ public class MonitoringCommandServiceImpl implements MonitoringCommandService {
     public Optional<Monitoring> handle(CreateMonitoringCommand command) {
         Monitoring monitoring = new Monitoring(
             command.medicineId(),
-            command.medicineName(),
-            command.temperatura(),
-            command.estado(),
+            command.temperature(),
+            command.state(),
             command.stock(),
-            command.ubicacion()
+            command.location()
         );
         return Optional.of(monitoringRepository.save(monitoring));
     }
@@ -36,11 +35,10 @@ public class MonitoringCommandServiceImpl implements MonitoringCommandService {
     public Optional<Monitoring> handle(UpdateMonitoringCommand command) {
         return monitoringRepository.findById(command.id()).map(existing -> {
             existing.setMedicineId(command.medicineId());
-            existing.setMedicineName(command.medicineName());
-            existing.setTemperatura(command.temperatura());
-            existing.setEstado(command.estado());
+            existing.setTemperature(command.temperature());
+            existing.setState(command.state());
             existing.setStock(command.stock());
-            existing.setUbicacion(command.ubicacion());
+            existing.setLocation(command.location());
             return monitoringRepository.save(existing);
         });
     }
