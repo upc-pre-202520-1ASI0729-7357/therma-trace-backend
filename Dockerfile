@@ -45,5 +45,8 @@ EXPOSE 8080
 # Set JVM options for container environment
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Set Spring profile to prod by default (can be overridden by environment variable)
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# Run the application with explicit profile activation
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -jar app.jar"]
