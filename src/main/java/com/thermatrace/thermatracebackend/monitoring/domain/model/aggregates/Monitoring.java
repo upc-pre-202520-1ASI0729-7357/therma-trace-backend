@@ -13,32 +13,28 @@ public class Monitoring {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "medicine_id", nullable = false)
     private Long medicineId;
 
-    @Column(nullable = false)
-    private String medicineName;
+    @Column(name = "temperature", nullable = false)
+    private Double temperature;
 
-    @Column(nullable = false)
-    private Double temperatura;
+    @Column(name = "state", nullable = false)
+    private String state;
 
-    @Column(nullable = false)
-    private String estado;
-
-    @Column(nullable = false)
+    @Column(name = "stock", nullable = false)
     private Integer stock;
 
-    @Column(nullable = false)
-    private String ubicacion;
+    @Column(name = "location", nullable = false)
+    private String location;
 
     protected Monitoring() {}
 
-    public Monitoring(Long medicineId, String medicineName, Double temperatura, String estado, Integer stock, String ubicacion) {
+    public Monitoring(Long medicineId, Double temperature, String state, Integer stock, String location) {
         this.medicineId = medicineId;
-        this.medicineName = medicineName;
-        this.temperatura = temperatura;
-        this.estado = estado;
+        this.temperature = temperature;
+        this.state = state;
         this.stock = stock;
-        this.ubicacion = ubicacion;
+        this.location = location;
     }
 }

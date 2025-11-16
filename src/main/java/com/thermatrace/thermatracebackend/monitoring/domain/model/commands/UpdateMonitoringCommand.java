@@ -3,9 +3,8 @@ package com.thermatrace.thermatracebackend.monitoring.domain.model.commands;
 public record UpdateMonitoringCommand(
     Long id,
     Long medicineId,
-    String medicineName,
-    Double temperatura,
-    String estado,
+    Double temperature,
+    String state,
     Integer stock,
-    String ubicacion
+    String location
 ) {}
