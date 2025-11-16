@@ -71,11 +71,10 @@ public class MedicineMonitoringController {
         var command = new UpdateMonitoringCommand(
             id,
             resource.medicineId(),
-            resource.medicineName(),
-            resource.temperatura(),
-            resource.estado(),
+            resource.temperature(),
+            resource.state(),
             resource.stock(),
-            resource.ubicacion()
+            resource.location()
         );
         var result = monitoringCommandService.handle(command);
         return result.map(monitoring ->

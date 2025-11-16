@@ -9,11 +9,10 @@ public class CreateMonitoringCommandFromResourceAssembler {
     public CreateMonitoringCommand toCommand(CreateMonitoringResource resource) {
         return new CreateMonitoringCommand(
             resource.medicineId(),
-            resource.medicineName(),
-            resource.temperatura(),
-            resource.estado(),
+            resource.temperature(),
+            resource.state(),
             resource.stock(),
-            resource.ubicacion()
+            resource.location()
         );
     }
 }

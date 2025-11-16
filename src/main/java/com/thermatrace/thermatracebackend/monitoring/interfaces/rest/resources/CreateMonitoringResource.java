@@ -2,9 +2,8 @@ package com.thermatrace.thermatracebackend.monitoring.interfaces.rest.resources;
 
 public record CreateMonitoringResource(
     Long medicineId,
-    String medicineName,
-    Double temperatura,
-    String estado,
+    Double temperature,
+    String state,
     Integer stock,
-    String ubicacion
+    String location
 ) {}
