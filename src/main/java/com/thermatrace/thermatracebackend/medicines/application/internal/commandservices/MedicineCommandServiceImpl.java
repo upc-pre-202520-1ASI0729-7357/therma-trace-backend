@@ -6,6 +6,8 @@ import com.thermatrace.thermatracebackend.medicines.domain.model.commands.Delete
 import com.thermatrace.thermatracebackend.medicines.domain.model.commands.UpdateMedicineCommand;
 import com.thermatrace.thermatracebackend.medicines.domain.services.MedicineCommandService;
 import com.thermatrace.thermatracebackend.medicines.infrastructure.persistence.jpa.repositories.MedicineRepository;
+import com.thermatrace.thermatracebackend.monitoring.domain.model.aggregates.Monitoring;
+import com.thermatrace.thermatracebackend.monitoring.infrastructure.persistence.jpa.repositories.MonitoringRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -14,21 +16,42 @@ import java.util.Optional;
 public class MedicineCommandServiceImpl implements MedicineCommandService {
 
     private final MedicineRepository medicineRepository;
+    private final MonitoringRepository monitoringRepository;
 
-    public MedicineCommandServiceImpl(MedicineRepository medicineRepository) {
+    public MedicineCommandServiceImpl(MedicineRepository medicineRepository, MonitoringRepository monitoringRepository) {
         this.medicineRepository = medicineRepository;
+        this.monitoringRepository = monitoringRepository;
     }
 
     @Override
     public Optional<Medicine> handle(CreateMedicineCommand command) {
         try {
+            // Create medicine
             var medicine = new Medicine(
                     command.userId(),
                     command.name(),
                     command.expirationDate(),
                     command.imageUrl()
             );
-            return Optional.of(medicineRepository.save(medicine));
+            var savedMedicine = medicineRepository.save(medicine);
+
+            // Determine initial state based on expiration date
+            String initialState = command.expirationDate().isBefore(java.time.LocalDate.now())
+                    ? "inactive"  // Expired
+                    : "active";   // Not expired
+
+            // Auto-create default monitoring entry for the new medicine
+            var monitoring = new Monitoring(
+                    command.userId(),
+                    savedMedicine.getId(),
+                    0.0,           // Default temperature
+                    initialState,  // State based on expiration
+                    0,             // Default stock
+                    "Not set"      // Default location
+            );
+            monitoringRepository.save(monitoring);
+
+            return Optional.of(savedMedicine);
         } catch (Exception e) {
             throw new IllegalArgumentException("Error creating medicine: " + e.getMessage());
         }
@@ -44,7 +67,20 @@ public class MedicineCommandServiceImpl implements MedicineCommandService {
                             command.expirationDate(),
                             command.imageUrl()
                     );
-                    return medicineRepository.save(medicine);
+                    var updatedMedicine = medicineRepository.save(medicine);
+
+                    // Update monitoring state based on expiration date
+                    monitoringRepository.findByMedicineIdAndUserId(command.id(), command.userId())
+                            .ifPresent(monitoring -> {
+                                // Determine state based on expiration date
+                                String newState = command.expirationDate().isBefore(java.time.LocalDate.now())
+                                        ? "inactive"  // Expired
+                                        : "active";   // Not expired
+                                monitoring.setState(newState);
+                                monitoringRepository.save(monitoring);
+                            });
+
+                    return updatedMedicine;
                 });
     }
 
