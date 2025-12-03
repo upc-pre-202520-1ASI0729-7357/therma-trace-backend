@@ -1,7 +1,9 @@
 package com.thermatrace.thermatracebackend.medicines.application.internal.queryservices;
 
 import com.thermatrace.thermatracebackend.medicines.domain.model.aggregates.Medicine;
+import com.thermatrace.thermatracebackend.medicines.domain.model.queries.GetAllMedicinesByUserIdQuery;
 import com.thermatrace.thermatracebackend.medicines.domain.model.queries.GetAllMedicinesQuery;
+import com.thermatrace.thermatracebackend.medicines.domain.model.queries.GetMedicineByIdAndUserIdQuery;
 import com.thermatrace.thermatracebackend.medicines.domain.model.queries.GetMedicineByIdQuery;
 import com.thermatrace.thermatracebackend.medicines.domain.services.MedicineQueryService;
 import com.thermatrace.thermatracebackend.medicines.infrastructure.persistence.jpa.repositories.MedicineRepository;
@@ -27,5 +29,15 @@ public class MedicineQueryServiceImpl implements MedicineQueryService {
     @Override
     public Optional<Medicine> handle(GetMedicineByIdQuery query) {
         return medicineRepository.findById(query.id());
+    }
+
+    @Override
+    public List<Medicine> handle(GetAllMedicinesByUserIdQuery query) {
+        return medicineRepository.findAllByUserId(query.userId());
+    }
+
+    @Override
+    public Optional<Medicine> handle(GetMedicineByIdAndUserIdQuery query) {
+        return medicineRepository.findByIdAndUserId(query.medicineId(), query.userId());
     }
 }
