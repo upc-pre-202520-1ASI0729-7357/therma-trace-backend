@@ -12,17 +12,8 @@ public enum Plans {
         false,
         1  // Weekly alerts
     ),
-    BASIC(
-        9.99,
-        "Basic",
-        "Standard features with increased capacity",
-        20,
-        true,  // Daily alerts
-        false, // No advanced reports
-        7      // Daily alerts
-    ),
     PREMIUM(
-        19.99,
+        59.99,
         "Premium",
         "All features with unlimited capacity",
         100,
@@ -31,7 +22,7 @@ public enum Plans {
         7      // Daily alerts
     ),
     ENTERPRISE(
-        49.99,
+        99.99,
         "Enterprise",
         "Complete solution with scheduled reports",
         999,
@@ -100,15 +91,8 @@ public enum Plans {
                 "Temperature monitoring",
                 "Expiration tracking"
             );
-            case BASIC -> List.of(
-                "Up to 20 medicaments",
-                "Daily alerts",
-                "Temperature monitoring",
-                "Expiration tracking",
-                "Basic charts"
-            );
             case PREMIUM -> List.of(
-                "Up to 100 medicaments",
+                "Up to 15 medicaments",
                 "Daily alerts",
                 "Temperature monitoring",
                 "Expiration tracking",

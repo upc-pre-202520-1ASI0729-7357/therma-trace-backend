@@ -6,8 +6,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CreateMonitoringCommandFromResourceAssembler {
-    public CreateMonitoringCommand toCommand(CreateMonitoringResource resource) {
+    public CreateMonitoringCommand toCommand(Long userId, CreateMonitoringResource resource) {
         return new CreateMonitoringCommand(
+            userId,
             resource.medicineId(),
             resource.temperature(),
             resource.state(),

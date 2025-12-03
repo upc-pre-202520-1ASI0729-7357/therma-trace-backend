@@ -46,9 +46,17 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         seedRoles();
-        seedAdminUser();
-        var medicines = seedMedicines();
-        seedMonitoring(medicines);
+        var adminUser = seedAdminUser();
+        var regularUser = seedRegularUser();
+
+        // Seed medicines for admin user
+        var adminMedicines = seedMedicines(adminUser.getId(), "admin");
+        seedMonitoring(adminUser.getId(), adminMedicines, "admin");
+
+        // Seed medicines for regular user
+        var regularMedicines = seedMedicines(regularUser.getId(), "regular");
+        seedMonitoring(regularUser.getId(), regularMedicines, "regular");
+
         log.info("Data seeding completed");
     }
 
@@ -63,54 +71,83 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void seedAdminUser() {
+    private User seedAdminUser() {
         final String adminEmail = "admin@thermatrace.com";
         if (userRepository.existsByEmail(adminEmail)) {
+            var existingAdmin = userRepository.findByEmail(adminEmail).orElseThrow();
             log.info("Admin user already exists: {}", adminEmail);
-            return;
+            return existingAdmin;
         }
         var admin = new User("Admin", "ThermaTrace", adminEmail, hashingService.encode("ThermaTrace123!"));
-        // language and timezone optional defaults
         admin.setLanguageId("es");
         admin.setTimezoneId("America/Lima");
 
-        // assign roles
-        var roleUser = roleRepository.findByName(Roles.ROLE_USER).orElseThrow();
+        // Admin gets ROLE_ADMIN only
         var roleAdmin = roleRepository.findByName(Roles.ROLE_ADMIN).orElseThrow();
-        admin.addRole(roleUser);
         admin.addRole(roleAdmin);
 
-        userRepository.save(admin);
-        log.info("Seeded admin user: {}", adminEmail);
+        var savedAdmin = userRepository.save(admin);
+        log.info("Seeded admin user: {} with ROLE_ADMIN", adminEmail);
+        return savedAdmin;
     }
 
-    private List<Medicine> seedMedicines() {
-        if (medicineRepository.count() > 0) {
-            return medicineRepository.findAll();
+    private User seedRegularUser() {
+        final String userEmail = "user@thermatrace.com";
+        if (userRepository.existsByEmail(userEmail)) {
+            var existingUser = userRepository.findByEmail(userEmail).orElseThrow();
+            log.info("Regular user already exists: {}", userEmail);
+            return existingUser;
         }
-        var m1 = new Medicine("Penicilina", LocalDate.parse("2025-10-15"), "https://example.com/images/penicilina.jpg");
-        var m2 = new Medicine("Ibuprofeno", LocalDate.now().plusMonths(8), "https://example.com/images/ibuprofeno.jpg");
-        var m3 = new Medicine("Paracetamol", LocalDate.now().plusMonths(12), "https://example.com/images/paracetamol.jpg");
+        var user = new User("John", "Doe", userEmail, hashingService.encode("User123"));
+        user.setLanguageId("en");
+        user.setTimezoneId("America/New_York");
+
+        // Regular user gets ROLE_USER only
+        var roleUser = roleRepository.findByName(Roles.ROLE_USER).orElseThrow();
+        user.addRole(roleUser);
+
+        var savedUser = userRepository.save(user);
+        log.info("Seeded regular user: {} with ROLE_USER", userEmail);
+        return savedUser;
+    }
+
+    private List<Medicine> seedMedicines(Long userId, String userType) {
+        // Check if medicines already exist for this user
+        var existingMedicines = medicineRepository.findAllByUserId(userId);
+        if (!existingMedicines.isEmpty()) {
+            log.info("Medicines already exist for {} user (ID: {}), found {} medicines", userType, userId, existingMedicines.size());
+            return existingMedicines;
+        }
+
+        var m1 = new Medicine(userId, "Penicillin", LocalDate.parse("2025-10-15"), "https://example.com/images/penicillin.jpg");
+        var m2 = new Medicine(userId, "Ibuprofen", LocalDate.now().plusMonths(8), "https://example.com/images/ibuprofen.jpg");
+        var m3 = new Medicine(userId, "Acetaminophen", LocalDate.now().plusMonths(12), "https://example.com/images/acetaminophen.jpg");
         var saved = medicineRepository.saveAll(List.of(m1, m2, m3));
-        log.info("Seeded {} medicines", saved.size());
+        log.info("Seeded {} medicines for {} user (ID: {})", saved.size(), userType, userId);
         return saved;
     }
 
-    private void seedMonitoring(List<Medicine> medicines) {
+    private void seedMonitoring(Long userId, List<Medicine> medicines, String userType) {
         if (medicines == null || medicines.isEmpty()) return;
-        if (monitoringRepository.count() > 0) return;
 
-        // create 2-3 monitoring rows
+        // Check if monitoring entries already exist for this user
+        var existingMonitoring = monitoringRepository.findAllByUserId(userId);
+        if (!existingMonitoring.isEmpty()) {
+            log.info("Monitoring entries already exist for {} user (ID: {}), found {} entries", userType, userId, existingMonitoring.size());
+            return;
+        }
+
+        // create 3 monitoring entries
         var first = medicines.get(0);
-        var mon1 = new Monitoring(first.getId(), 0.3, "active", 2, "block A");
+        var mon1 = new Monitoring(userId, first.getId(), 0.5, "active", 2, "Block A");
 
         var second = medicines.size() > 1 ? medicines.get(1) : first;
-        var mon2 = new Monitoring(second.getId(), 4.2, "active", 10, "Principal storage");
+        var mon2 = new Monitoring(userId, second.getId(), 4.2, "active", 10, "Main Storage");
 
         var third = medicines.size() > 2 ? medicines.get(2) : first;
-        var mon3 = new Monitoring(third.getId(), 7.0, "inactive", 0, "Block B");
+        var mon3 = new Monitoring(userId, third.getId(), 8.5, "inactive", 0, "Block B");
 
         monitoringRepository.saveAll(List.of(mon1, mon2, mon3));
-        log.info("Seeded monitoring entries: {}", 3);
+        log.info("Seeded {} monitoring entries for {} user (ID: {})", 3, userType, userId);
     }
 }

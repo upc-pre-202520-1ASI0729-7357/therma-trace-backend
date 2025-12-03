@@ -13,6 +13,9 @@ public class Monitoring {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(name = "medicine_id", nullable = false)
     private Long medicineId;
 
@@ -30,7 +33,8 @@ public class Monitoring {
 
     protected Monitoring() {}
 
-    public Monitoring(Long medicineId, Double temperature, String state, Integer stock, String location) {
+    public Monitoring(Long userId, Long medicineId, Double temperature, String state, Integer stock, String location) {
+        this.userId = userId;
         this.medicineId = medicineId;
         this.temperature = temperature;
         this.state = state;

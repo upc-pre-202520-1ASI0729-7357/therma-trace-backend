@@ -4,8 +4,9 @@ import com.thermatrace.thermatracebackend.medicines.domain.model.commands.Update
 import com.thermatrace.thermatracebackend.medicines.interfaces.rest.resources.UpdateMedicineResource;
 
 public class UpdateMedicineCommandFromResourceAssembler {
-    public static UpdateMedicineCommand toCommandFromResource(Long medicineId, UpdateMedicineResource resource) {
+    public static UpdateMedicineCommand toCommandFromResource(Long userId, Long medicineId, UpdateMedicineResource resource) {
         return new UpdateMedicineCommand(
+                userId,
                 medicineId,
                 resource.name(),
                 resource.expirationDate(),
