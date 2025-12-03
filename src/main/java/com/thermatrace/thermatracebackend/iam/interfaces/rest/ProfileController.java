@@ -11,6 +11,8 @@ import com.thermatrace.thermatracebackend.shared.domain.exceptions.ResourceNotFo
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Profile", description = "User profile management endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class ProfileController {
+
+    private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
 
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
@@ -58,11 +62,16 @@ public class ProfileController {
             @RequestBody UpdateProfileResource resource,
             Authentication authentication) {
 
+        log.info("PATCH /api/v1/profile - Received update profile request: phone={}, timezoneId={}, languageId={}, currentPlan={}",
+                resource.phone(), resource.timezoneId(), resource.languageId(), resource.currentPlan());
+
         String email = authentication.getName();
 
         // Get user to get their ID
         var user = userQueryService.handle(new GetUserByEmailQuery(email))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        log.info("Current user plan: {} -> Requested plan: {}", user.getCurrentPlan(), resource.currentPlan());
 
         // Create command
         var command = new UpdateProfileCommand(
@@ -71,7 +80,8 @@ public class ProfileController {
                 null,  // lastName not updated here
                 resource.phone(),
                 resource.timezoneId(),
-                resource.languageId()
+                resource.languageId(),
+                resource.currentPlan()
         );
 
         // Execute command
@@ -80,6 +90,8 @@ public class ProfileController {
         // Get updated user
         var updatedUser = userQueryService.handle(new GetUserByEmailQuery(email))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        log.info("Profile updated successfully. New plan: {}", updatedUser.getCurrentPlan());
 
         var profileResource = ProfileResourceFromEntityAssembler.toResourceFromEntity(updatedUser);
         return ResponseEntity.ok(profileResource);

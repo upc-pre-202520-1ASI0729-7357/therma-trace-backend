@@ -125,6 +125,11 @@ public class UserCommandServiceImpl implements UserCommandService {
                 command.languageId()
         );
 
+        // Update plan if provided
+        if (command.currentPlan() != null) {
+            user.updatePlan(command.currentPlan());
+        }
+
         userRepository.save(user);
     }
 
