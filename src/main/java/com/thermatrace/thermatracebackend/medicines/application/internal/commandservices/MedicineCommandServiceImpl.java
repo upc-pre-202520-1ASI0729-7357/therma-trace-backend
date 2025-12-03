@@ -23,6 +23,7 @@ public class MedicineCommandServiceImpl implements MedicineCommandService {
     public Optional<Medicine> handle(CreateMedicineCommand command) {
         try {
             var medicine = new Medicine(
+                    command.userId(),
                     command.name(),
                     command.expirationDate(),
                     command.imageUrl()
@@ -35,7 +36,8 @@ public class MedicineCommandServiceImpl implements MedicineCommandService {
 
     @Override
     public Optional<Medicine> handle(UpdateMedicineCommand command) {
-        return medicineRepository.findById(command.id())
+        // Verify the medicine belongs to the user before updating
+        return medicineRepository.findByIdAndUserId(command.id(), command.userId())
                 .map(medicine -> {
                     medicine.updateMedicine(
                             command.name(),
@@ -48,6 +50,7 @@ public class MedicineCommandServiceImpl implements MedicineCommandService {
 
     @Override
     public void handle(DeleteMedicineCommand command) {
+        // This will be updated by controller to verify userId
         if (medicineRepository.existsById(command.id())) {
             medicineRepository.deleteById(command.id());
         } else {

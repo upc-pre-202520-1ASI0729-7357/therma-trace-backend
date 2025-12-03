@@ -16,6 +16,10 @@ import java.time.LocalDate;
 @Setter
 public class Medicine extends AuditableAbstractAggregateRoot<Medicine> {
 
+    @NotNull
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "name", column = @Column(name = "name", nullable = false))
@@ -36,14 +40,16 @@ public class Medicine extends AuditableAbstractAggregateRoot<Medicine> {
         // Required by JPA
     }
 
-    public Medicine(MedicineName medicineName, LocalDate expirationDate, ImageUrl imageUrl) {
+    public Medicine(Long userId, MedicineName medicineName, LocalDate expirationDate, ImageUrl imageUrl) {
+        this.userId = userId;
         this.medicineName = medicineName;
         this.expirationDate = expirationDate;
         this.imageUrl = imageUrl;
     }
 
-    public Medicine(String name, LocalDate expirationDate, String imageUrl) {
-        this(new MedicineName(name),
+    public Medicine(Long userId, String name, LocalDate expirationDate, String imageUrl) {
+        this(userId,
+             new MedicineName(name),
              expirationDate,
              new ImageUrl(imageUrl));
     }

@@ -14,8 +14,9 @@ import java.util.Arrays;
 /**
  * ApplicationReadyEventHandler
  * This class handles the ApplicationReadyEvent and seeds the database with the default roles.
+ * DISABLED: Role seeding is now handled by DataInitializer to avoid duplication
  */
-@Component
+//@Component
 public class ApplicationReadyEventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationReadyEventHandler.class);
