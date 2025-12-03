@@ -22,6 +22,7 @@ public class MonitoringCommandServiceImpl implements MonitoringCommandService {
     @Override
     public Optional<Monitoring> handle(CreateMonitoringCommand command) {
         Monitoring monitoring = new Monitoring(
+            command.userId(),
             command.medicineId(),
             command.temperature(),
             command.state(),
@@ -33,7 +34,8 @@ public class MonitoringCommandServiceImpl implements MonitoringCommandService {
 
     @Override
     public Optional<Monitoring> handle(UpdateMonitoringCommand command) {
-        return monitoringRepository.findById(command.id()).map(existing -> {
+        // Verify the monitoring belongs to the user before updating
+        return monitoringRepository.findByIdAndUserId(command.id(), command.userId()).map(existing -> {
             existing.setMedicineId(command.medicineId());
             existing.setTemperature(command.temperature());
             existing.setState(command.state());
@@ -45,6 +47,7 @@ public class MonitoringCommandServiceImpl implements MonitoringCommandService {
 
     @Override
     public void handle(DeleteMonitoringCommand command) {
+        // This will be updated by controller to verify userId
         monitoringRepository.deleteById(command.id());
     }
 }
